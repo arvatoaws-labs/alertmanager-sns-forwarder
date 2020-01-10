@@ -272,7 +272,7 @@ func alertPOSTHandler(c *gin.Context) {
 		Message:  aws.String(requestString),
 		TopicArn: aws.String(topicArn),
 		MessageAttributes: map[string]*sns.MessageAttributeValue{
-			"AWSAccountID": {
+			"AWSAccountID": &sns.MessageAttributeValue{
 				DataType:    aws.String("String"),
 				StringValue: aws.String(*awsAccountID),
 			},
