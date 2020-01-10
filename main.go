@@ -273,10 +273,10 @@ func alertPOSTHandler(c *gin.Context) {
 		TopicArn: aws.String(topicArn),
 		MessageAttributes: map[string]sns.MessageAttributeValue{
 			"AWSAccountID": {
-				DataType: aws.String("String"),
-				StringValue: aws.String(string())
-			}
-		}
+				DataType:    aws.String("String"),
+				StringValue: aws.String(*awsAccountID),
+			},
+		},
 	}
 
 	resp, err := svc.Publish(params)
