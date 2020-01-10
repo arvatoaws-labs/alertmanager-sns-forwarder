@@ -55,6 +55,7 @@ var (
 	listenAddr            = kingpin.Flag("addr", "Address on which to listen").Default(":9087").Envar("SNS_FORWARDER_ADDRESS").String()
 	debug                 = kingpin.Flag("debug", "Debug mode").Default("false").Envar("SNS_FORWARDER_DEBUG").Bool()
 	arnPrefix             = kingpin.Flag("arn-prefix", "Prefix to use for ARNs").Envar("SNS_FORWARDER_ARN_PREFIX").String()
+	awsAccountID          = kingpin.Flag("aws-account-id", "Account ID the forwarder is running in").Envar("AWS_ACCOUNT_ID").String()
 	snsSubject            = kingpin.Flag("sns-subject", "SNS subject").Envar("SNS_SUBJECT").String()
 	templatePath          = kingpin.Flag("template-path", "Template path").Envar("SNS_FORWARDER_TEMPLATE_PATH").String()
 	templateTimeZone      = kingpin.Flag("template-time-zone", "Template time zone").Envar("SNS_FORWARDER_TEMPLATE_TIME_ZONE").String()
@@ -270,6 +271,12 @@ func alertPOSTHandler(c *gin.Context) {
 		Subject:  snsSubject,
 		Message:  aws.String(requestString),
 		TopicArn: aws.String(topicArn),
+		MessageAttributes: map[string]*sns.MessageAttributeValue{
+			"AWSAccountID": &sns.MessageAttributeValue{
+				DataType:    aws.String("String"),
+				StringValue: aws.String(*awsAccountID),
+			},
+		},
 	}
 
 	resp, err := svc.Publish(params)
