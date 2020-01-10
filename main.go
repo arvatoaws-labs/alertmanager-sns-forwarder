@@ -23,6 +23,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/aws/aws-sdk-go/service/sns"
+	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/gin-gonic/gin"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
@@ -55,13 +56,13 @@ var (
 	listenAddr            = kingpin.Flag("addr", "Address on which to listen").Default(":9087").Envar("SNS_FORWARDER_ADDRESS").String()
 	debug                 = kingpin.Flag("debug", "Debug mode").Default("false").Envar("SNS_FORWARDER_DEBUG").Bool()
 	arnPrefix             = kingpin.Flag("arn-prefix", "Prefix to use for ARNs").Envar("SNS_FORWARDER_ARN_PREFIX").String()
-	awsAccountID          = kingpin.Flag("aws-account-id", "Account ID the forwarder is running in").Envar("AWS_ACCOUNT_ID").String()
 	snsSubject            = kingpin.Flag("sns-subject", "SNS subject").Envar("SNS_SUBJECT").String()
 	templatePath          = kingpin.Flag("template-path", "Template path").Envar("SNS_FORWARDER_TEMPLATE_PATH").String()
 	templateTimeZone      = kingpin.Flag("template-time-zone", "Template time zone").Envar("SNS_FORWARDER_TEMPLATE_TIME_ZONE").String()
 	templateTimeOutFormat = kingpin.Flag("template-time-out-format", "Template time out format").Envar("SNS_FORWARDER_TEMPLATE_TIME_OUT_FORMAT").String()
 	templateSplitToken    = kingpin.Flag("template-split-token", "Template split token").Envar("SNS_FORWARDER_TEMPLATE_SPLIT_TOKEN").String()
 	svc                   *sns.SNS
+	stsApi                *sts.STS
 	tmpH                  *template.Template
 
 	namespace = "forwarder"
@@ -154,6 +155,7 @@ func main() {
 	}
 
 	svc = sns.New(session)
+	stsApi = sts.New(session)
 
 	if !*debug {
 		gin.SetMode(gin.ReleaseMode)
@@ -267,16 +269,26 @@ func alertPOSTHandler(c *gin.Context) {
 	log.Debugf("%s", requestString)
 	log.Debugln("+-----------------------------------------------------------+")
 
-	params := &sns.PublishInput{
-		Subject:  snsSubject,
-		Message:  aws.String(requestString),
-		TopicArn: aws.String(topicArn),
-		MessageAttributes: map[string]*sns.MessageAttributeValue{
-			"AWSAccountID": &sns.MessageAttributeValue{
-				DataType:    aws.String("String"),
-				StringValue: aws.String(*awsAccountID),
+	callerIdentity, errCallerIdentity := stsApi.GetCallerIdentity(&sts.GetCallerIdentityInput{})
+
+	if errCallerIdentity == nil {
+		params := &sns.PublishInput{
+			Subject:  snsSubject,
+			Message:  aws.String(requestString),
+			TopicArn: aws.String(topicArn),
+			MessageAttributes: map[string]*sns.MessageAttributeValue{
+				"AWSAccountID": &sns.MessageAttributeValue{
+					DataType:    aws.String("String"),
+					StringValue: callerIdentity.Account,
+				},
 			},
-		},
+		}
+	} else {
+		params := &sns.PublishInput{
+			Subject:  snsSubject,
+			Message:  aws.String(requestString),
+			TopicArn: aws.String(topicArn),
+		}
 	}
 
 	resp, err := svc.Publish(params)
