@@ -271,8 +271,9 @@ func alertPOSTHandler(c *gin.Context) {
 
 	callerIdentity, errCallerIdentity := stsApi.GetCallerIdentity(&sts.GetCallerIdentityInput{})
 
+	var params *sns.PublishInput
 	if errCallerIdentity == nil {
-		params := &sns.PublishInput{
+		params = &sns.PublishInput{
 			Subject:  snsSubject,
 			Message:  aws.String(requestString),
 			TopicArn: aws.String(topicArn),
@@ -284,7 +285,7 @@ func alertPOSTHandler(c *gin.Context) {
 			},
 		}
 	} else {
-		params := &sns.PublishInput{
+		params = &sns.PublishInput{
 			Subject:  snsSubject,
 			Message:  aws.String(requestString),
 			TopicArn: aws.String(topicArn),
