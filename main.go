@@ -62,7 +62,7 @@ var (
 	templateTimeOutFormat = kingpin.Flag("template-time-out-format", "Template time out format").Envar("SNS_FORWARDER_TEMPLATE_TIME_OUT_FORMAT").String()
 	templateSplitToken    = kingpin.Flag("template-split-token", "Template split token").Envar("SNS_FORWARDER_TEMPLATE_SPLIT_TOKEN").String()
 	svc                   *sns.SNS
-	stsApi                *sts.STS
+	stsAPI                *sts.STS
 	tmpH                  *template.Template
 
 	namespace = "forwarder"
@@ -155,7 +155,7 @@ func main() {
 	}
 
 	svc = sns.New(session)
-	stsApi = sts.New(session)
+	stsAPI = sts.New(session)
 
 	if !*debug {
 		gin.SetMode(gin.ReleaseMode)
@@ -269,7 +269,7 @@ func alertPOSTHandler(c *gin.Context) {
 	log.Debugf("%s", requestString)
 	log.Debugln("+-----------------------------------------------------------+")
 
-	callerIdentity, errCallerIdentity := stsApi.GetCallerIdentity(&sts.GetCallerIdentityInput{})
+	callerIdentity, errCallerIdentity := stsAPI.GetCallerIdentity(&sts.GetCallerIdentityInput{})
 
 	var params *sns.PublishInput
 	if errCallerIdentity == nil {
