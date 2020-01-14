@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sns"
+	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/gin-gonic/gin"
 )
 
@@ -94,6 +95,7 @@ func TestHealthEndpoint(t *testing.T) {
 func TestSNSAlertEndpoint(t *testing.T) {
 
 	svc = sns.New(mockUnavailableSession)
+	stsAPI = sts.New(mockUnavailableSession)
 
 	// Test that passing error payload results in BadRequest status
 	req, _ := http.NewRequest("POST", "/alert/test-topic", errReader(0))
@@ -114,6 +116,7 @@ func TestSNSAlertEndpoint(t *testing.T) {
 
 	// Test that request using the available mock Session results in OK status
 	svc = sns.New(mockNoReturnedDataSession)
+	stsAPI = sts.New(mockNoReturnedDataSession)
 	req, _ = http.NewRequest("POST", "/alert/test-topic", strings.NewReader("test-payload"))
 	testHTTPResponse(t, r, req, http.StatusOK)
 
@@ -121,6 +124,7 @@ func TestSNSAlertEndpoint(t *testing.T) {
 	templatePath = &templatePathStr
 	tmpH = loadTemplate(templatePath)
 	svc = sns.New(mockJsonDataSession)
+	stsAPI = sts.New(mockJsonDataSession)
 	req, _ = http.NewRequest("POST", "/alert/test-topic", bytes.NewReader(data))
 	testHTTPResponse(t, r, req, http.StatusOK)
 }

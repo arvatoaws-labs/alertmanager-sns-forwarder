@@ -269,6 +269,10 @@ func alertPOSTHandler(c *gin.Context) {
 	log.Debugf("%s", requestString)
 	log.Debugln("+-----------------------------------------------------------+")
 
+	if stsAPI == nil {
+		log.Error("stsAPI Empty")
+		return
+	}
 	callerIdentity, errCallerIdentity := stsAPI.GetCallerIdentity(&sts.GetCallerIdentityInput{})
 
 	var params *sns.PublishInput
