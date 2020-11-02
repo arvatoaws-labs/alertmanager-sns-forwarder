@@ -1,5 +1,5 @@
 # builder image
-FROM golang:alpine as builder
+FROM golang:1.15-alpine as builder
 
 RUN set -ex && apk --update --no-cache add \
     git \

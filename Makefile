@@ -16,8 +16,9 @@ test:
 	CGO_ENABLED=0 go test github.com/DataReply/${PROJECT_NAME}/...
 
 dep:
-	go get -u github.com/golang/dep/cmd/dep
-	dep ensure -update   
+	go mod init
+	# go get -u github.com/golang/dep/cmd/dep
+	# dep ensure
 
 clean:
 	rm -rf bin
